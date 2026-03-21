@@ -1,6 +1,3 @@
-using System.ComponentModel;
-using System.Reflection;
-using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -9,6 +6,7 @@ public class PlayerMovement: MonoBehaviour
     #region Properties
     public Vector3 Movement { get; set; }
     public float Speed { get; set; } = 5f;
+    public Vector3 Bounds = new Vector3(8.25f, 4.5f); 
     #endregion
 
     #region UnityEngine
@@ -20,6 +18,7 @@ public class PlayerMovement: MonoBehaviour
     private void Update()
     {
         Move();
+        KeepPlayerInBounds();
     }
     #endregion
 
@@ -32,5 +31,13 @@ public class PlayerMovement: MonoBehaviour
 
         Movement = new Vector3(isLeftPressed ? -1 : isRightPressed ? 1 : 0, isDownPressed ? -1 : isUpPressed ? 1 : 0, 0);
         transform.position += Speed * Movement * Time.deltaTime;
+    }
+
+    private void KeepPlayerInBounds()
+    {
+        Vector3 pos = transform.position;
+        pos.x = Mathf.Clamp(pos.x, -Bounds.x, Bounds.x);
+        pos.y = Mathf.Clamp(pos.y, -Bounds.y, Bounds.y);
+        transform.position = pos;
     }
 }

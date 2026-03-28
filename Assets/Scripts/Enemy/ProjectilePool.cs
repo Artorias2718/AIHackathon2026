@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Player
+namespace Enemy
 {
     public class ProjectilePool : MonoBehaviour
     {

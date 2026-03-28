@@ -1,36 +1,36 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-namespace Player
+namespace Enemy
 {
     public class Weapon : MonoBehaviour
     {
         #region Properties
-        public float fireRate = 0.5f;
+        public float fireRate = 0.05f;
         public GameObject ShotPrefab;
         public Transform FirePoint;
-    
-        private InputAction _fireAction;
+
+        //private InputAction _fireAction;
         private float _nextFireTime = 0f;
         #endregion
-    
+
         #region UnityEngine
         private void Awake()
         {
             var playerInput = GetComponent<PlayerInput>();
-            _fireAction = playerInput.actions["Fire"];
+            //_fireAction = playerInput.actions["Fire"];
         }
-    
+
         private void Update()
         {
-            if(_fireAction.IsPressed() && Time.time >= _nextFireTime)
+            if(Time.time >= _nextFireTime)
             {
                 Fire();
                 _nextFireTime = Time.time + fireRate;
             }
         }
         #endregion
-    
+
         #region Custom
         private void Fire()
         {

@@ -415,6 +415,9 @@ MonoBehaviour:
   rows: 4
   cols: 10
   spacing: {x: 1.2, y: 1}
+  swaySpeed: 2
+  swayAmount: 3
+  diveInterval: 5
 --- !u!1001 &1673814207
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -429,7 +432,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3413970690883181820, guid: 7ee28d708ee4a2e4faa8a8d01fca2c6d, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -2.5
+      value: -4.5
       objectReference: {fileID: 0}
     - target: {fileID: 3413970690883181820, guid: 7ee28d708ee4a2e4faa8a8d01fca2c6d, type: 3}
       propertyPath: m_LocalPosition.z

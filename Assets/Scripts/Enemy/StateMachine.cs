@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Enemy.States;
+using UnityEngine;
 
 namespace Enemy
 {
@@ -42,7 +43,14 @@ namespace Enemy
             return true;
         }
 
-        public void Update() => _activeState?.Update();
+        //public void Update() => _activeState?.Update();
+        public void Update()
+        {
+            if (_activeState != null)
+            {
+                _activeState.Update();
+            }
+        }
         #endregion
     }
 }

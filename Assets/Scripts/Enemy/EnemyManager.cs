@@ -18,6 +18,9 @@ namespace Enemy
         [Header("Sway Settings")]
         public float swaySpeed = 2f;
         public float swayAmount = 3f;
+        public float diveInterval = 5f;
+
+        private float _diveTimer = 0;
         #endregion
 
         #region UnityEngine
@@ -37,6 +40,14 @@ namespace Enemy
             // A simple Sine wave creates that classic side-to-side "dance"
             float xOffset = Mathf.Sin(Time.time * swaySpeed) * swayAmount;
             formationRoot.position = new Vector3(xOffset, formationRoot.position.y, 0);
+            
+            _diveTimer += Time.deltaTime;
+            if(_diveTimer >= diveInterval)
+            {
+                _diveTimer = 0;
+                TriggerRandomDive();
+            }
+
         }
         #endregion
 
@@ -71,6 +82,15 @@ namespace Enemy
                         _activeEnemies.Add(behavior);
                     }
                 }
+            }
+        }
+
+        private void TriggerRandomDive()
+        {
+            if(_activeEnemies.Count > 0)
+            {
+                int index = Random.Range(0, _activeEnemies.Count);
+                _activeEnemies[index].TriggerDive();
             }
         }
 

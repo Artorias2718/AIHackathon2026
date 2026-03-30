@@ -23,6 +23,7 @@ namespace Enemy
             fsm.AddState(CreateState<Spawning>());
             fsm.AddState(new InFormation()); // Doesn't need data usually
             fsm.AddState(CreateState<Diving>());
+            fsm.AddState(CreateState<Firing>());
             fsm.AddState(CreateState<Returning>());
 
             // Kick off the sequence

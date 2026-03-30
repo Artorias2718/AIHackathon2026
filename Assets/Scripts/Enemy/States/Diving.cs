@@ -10,15 +10,18 @@ namespace Enemy.States
         #region Custom
         public override void Enter()
         {
-            Data["Timer"] = 0f;
-            Data["StartPos"] = Actor.transform.position;
+            if(!Data.ContainsKey("Timer"))
+            {
+                float side = Random.value > 0.5f ? 1f : -1f;
 
-            // Pick a random "Swoop" point to the left or right
-            float side = Random.value > 0.5f ? 1f : -1f;
-            Data["ControlPos"] = Actor.transform.position + new Vector3(5f * side, -3f, 0);
-            Data["EndPos"] = new Vector3(Actor.transform.position.x, -7f, 0);
-
-            Actor.transform.SetParent(null); // Break away from the swaying formation
+                Data["Timer"] = 0f;
+                Data["StartPos"] = Actor.transform.position;
+                Data["ControlPos"] = Actor.transform.position + new Vector3(5f * side, -3f, 0);
+                Data["EndPos"] = new Vector3(Actor.transform.position.x, -7f, 0);
+                Data["HasFired"] = false;
+                
+                Actor.transform.SetParent(null); // Break away from the swaying formation
+            }
         }
 
         public override void Update()
@@ -36,9 +39,17 @@ namespace Enemy.States
 
             // Update rotation to look where it's flying
             Vector3 dir = positionOnCurve - Actor.transform.position;
-            if (dir != Vector3.zero) {
+            if (dir != Vector3.zero)
+            {
                 float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg - 90f;
                 Actor.transform.rotation = Quaternion.Euler(0, 0, angle);
+            }
+
+            if(!GetData<bool>("HasFired") && t >= 0.4f)
+            {
+                Data["HasFired"] = true;
+                FSM.SetActiveState<Firing>();
+                return;
             }
 
             Actor.transform.position = positionOnCurve;

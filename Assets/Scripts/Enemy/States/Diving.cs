@@ -10,21 +10,40 @@ namespace Enemy.States
         #region Custom
         public override void Enter()
         {
-            var actor = (EnemyBehavior)Data["Actor"];
-            actor.transform.SetParent(null);
+            Data["Timer"] = 0f;
+            Data["StartPos"] = Actor.transform.position;
+
+            // Pick a random "Swoop" point to the left or right
+            float side = Random.value > 0.5f ? 1f : -1f;
+            Data["ControlPos"] = Actor.transform.position + new Vector3(5f * side, -3f, 0);
+            Data["EndPos"] = new Vector3(Actor.transform.position.x, -7f, 0);
+
+            Actor.transform.SetParent(null); // Break away from the swaying formation
         }
 
         public override void Update()
         {
-            var actor = (EnemyBehavior)Data["Actor"];
+            float t = (float)Data["Timer"];
+            t += Time.deltaTime * 0.5f; // Adjust for dive speed
+            Data["Timer"] = t;
 
-            // Use World Space so rotation doesn't break direction
-            actor.transform.Translate(Vector3.down * actor.speed * Time.deltaTime, Space.World);
+            Vector3 p0 = (Vector3)Data["StartPos"];
+            Vector3 p1 = (Vector3)Data["ControlPos"];
+            Vector3 p2 = (Vector3)Data["EndPos"];
 
-            if (actor.transform.position.y < -6f)
-            {
-                actor.gameObject.SetActive(false);
+            // Quadratic Bezier Formula: (1-t)^2*P0 + 2(1-t)t*P1 + t^2*P2
+            Vector3 positionOnCurve = Mathf.Pow(1 - t, 2) * p0 + 2 * (1 - t) * t * p1 + Mathf.Pow(t, 2) * p2;
+
+            // Update rotation to look where it's flying
+            Vector3 dir = positionOnCurve - Actor.transform.position;
+            if (dir != Vector3.zero) {
+                float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg - 90f;
+                Actor.transform.rotation = Quaternion.Euler(0, 0, angle);
             }
+
+            Actor.transform.position = positionOnCurve;
+
+            if (t >= 1f) FSM.SetActiveState<Returning>();
         }
         #endregion
     }

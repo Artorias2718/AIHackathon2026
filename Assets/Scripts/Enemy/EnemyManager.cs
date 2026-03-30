@@ -5,6 +5,7 @@ namespace Enemy
 {
     public class EnemyManager : MonoBehaviour
     {
+        #region Properties
         private ObjectPool _pool; // Reference to your pool script
         private List<EnemyBehavior> _activeEnemies = new List<EnemyBehavior>();
 
@@ -14,6 +15,12 @@ namespace Enemy
         public int cols = 10;
         public Vector2 spacing = new Vector2(1.2f, 1f);
 
+        [Header("Sway Settings")]
+        public float swaySpeed = 2f;
+        public float swayAmount = 3f;
+        #endregion
+
+        #region UnityEngine
         private void Awake()
         {
             // Find the pool on the "Enemies" root object
@@ -25,6 +32,15 @@ namespace Enemy
             SpawnFormation();
         }
 
+        private void Update()
+        {
+            // A simple Sine wave creates that classic side-to-side "dance"
+            float xOffset = Mathf.Sin(Time.time * swaySpeed) * swayAmount;
+            formationRoot.position = new Vector3(xOffset, formationRoot.position.y, 0);
+        }
+        #endregion
+
+        #region Custom
         private void SpawnFormation()
         {
             for (int r = 0; r < rows; r++)
@@ -65,5 +81,6 @@ namespace Enemy
             if (row == 1) return "Butterfly";
             return "Boss";
         }
+        #endregion
     }
 }

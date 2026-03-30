@@ -1,95 +1,53 @@
 using UnityEngine;
+using Enemy.States;
 
 namespace Enemy
 {
     public class EnemyBehavior : MonoBehaviour
     {
-        #region Properties
-        public enum State { Spawning, InFormation, Diving, Returning }
-        public State currentState = State.Spawning;
+        private StateMachine fsm;
 
         [Header("Movement Settings")]
         public float speed = 5f;
         public float rotateSpeed = 10f;
 
-        private Transform formationTransform;
-        private Vector3 localHomePosition;
-        #endregion
+        [Header("Formation Settings")]
+        public Transform formationTransform;
+        public Vector3 localHomePosition;
 
-        #region UnityEngine
+        private void Start()
+        {
+            fsm = new StateMachine();
+
+            // Register all possible behaviors
+            fsm.AddState(CreateState<Spawning>());
+            fsm.AddState(new InFormation()); // Doesn't need data usually
+            fsm.AddState(CreateState<Diving>());
+            fsm.AddState(CreateState<Returning>());
+
+            // Kick off the sequence
+            fsm.SetActiveState<Spawning>();
+        }
+
         private void Update()
         {
-            switch (currentState)
-            {
-                case State.Spawning:
-                    HandleSpawning();
-                    break;
-                case State.InFormation:
-                    HandleInFormation();
-                    break;
-                case State.Diving:
-                    HandleDiving();
-                    break;
-            }
+            fsm.Update();
         }
-        #endregion
 
-        #region Custom
-        public void SetHome(Transform formation, Vector3 localPos)
+        // Helper to inject the necessary references into the State's Data bucket
+        private T CreateState<T>() where T : Base, new()
         {
-            formationTransform = formation;
-            localHomePosition = localPos;
-            currentState = State.Spawning;
+            T state = new T();
+            state.Data["Actor"] = this;
+            state.Data["FSM"] = fsm;
+            return state;
         }
-
-        private void HandleSpawning()
+        
+        // This is a public trigger you can call from a FormationManager 
+        // when it's time for this specific enemy to dive!
+        public void TriggerDive()
         {
-            // Calculate the world position of the slot in the moving formation
-            Vector3 targetWorldPos = formationTransform.TransformPoint(localHomePosition);
-
-            // Move towards the slot
-            transform.position = Vector3.MoveTowards(transform.position, targetWorldPos, speed * Time.deltaTime);
-
-            // Rotate to face the direction of travel
-            Vector3 direction = targetWorldPos - transform.position;
-            if (direction != Vector3.zero)
-            {
-                float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg - 90f;
-                Quaternion targetRotation = Quaternion.AngleAxis(angle, Vector3.forward);
-                transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotateSpeed * Time.deltaTime);
-            }
-
-            // Check if we arrived
-            if (Vector3.Distance(transform.position, targetWorldPos) < 0.1f)
-            {
-                // Parent the enemy so it moves with the formation 'Sway' automatically
-                transform.SetParent(formationTransform);
-                transform.localPosition = localHomePosition;
-                transform.localRotation = Quaternion.identity;
-                currentState = State.InFormation;
-            }
+            fsm.SetActiveState<Diving>();
         }
-
-        private void HandleInFormation()
-        {
-            // The formation parent handles the movement; we just stay put.
-            // You could add a tiny 'wiggle' animation here if you like.
-        }
-
-        private void HandleDiving()
-        {
-            // Unparent so we can move independently of the formation
-            if (transform.parent != null) transform.SetParent(null);
-
-            // Simple downward movement (you can replace this with a Bezier curve later)
-            transform.Translate(Vector2.down * speed * Time.deltaTime);
-
-            // Recycle if off-screen
-            if (transform.position.y < -6f) 
-            {
-                gameObject.SetActive(false);
-            }
-        }
-        #endregion
     }
 }

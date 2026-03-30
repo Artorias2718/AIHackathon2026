@@ -1,77 +1,69 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+using System.Collections.Generic;
 
 namespace Enemy
 {
     public class EnemyManager : MonoBehaviour
     {
-        #region Properties
+        private ObjectPool _pool; // Reference to your pool script
+        private List<EnemyBehavior> _activeEnemies = new List<EnemyBehavior>();
+
         [Header("Formation Settings")]
+        public Transform formationRoot;
         public int rows = 4;
-        public int columns = 8;
-        public float spacing = 1.5f;
-        // Empty object that moves/sways
-        public Transform formationParent;
+        public int cols = 10;
+        public Vector2 spacing = new Vector2(1.2f, 1f);
 
-        [Header("Spawning")]
-        public ObjectPool objectPool;
-        public float spawnInterval = 0.5f;
-        #endregion
+        private void Awake()
+        {
+            // Find the pool on the "Enemies" root object
+            _pool = GetComponent<ObjectPool>();
+        }
 
-        #region UnityEngine
         private void Start()
         {
-            StartCoroutine(CreateFormation());
+            SpawnFormation();
         }
 
-        private void Update()
+        private void SpawnFormation()
         {
-        
-        }
-        #endregion
-
-        #region Custom
-        private IEnumerator CreateFormation()
-        {
-            for(int r = 0; r < rows; ++r)
+            for (int r = 0; r < rows; r++)
             {
-                for(int c = 0; c < columns; ++c)
+                // Assign a tag based on the row to get the right color/prefab
+                string rowTag = GetTagForByRow(r);
+
+                for (int c = 0; c < cols; c++)
                 {
-                    // Determine which "tag or type of enemy" to spawn based on row or column
-                    string enemyType = "";
-                    switch(r)
+                    // 1. Get the object from the pool instead of Instantiate
+                    GameObject go = _pool.GetPooledObject(rowTag);
+
+                    if (go != null)
                     {
-                        case 0:
-                        case 1:
-                            enemyType = "Bee";
-                            break;
-                        case 2: 
-                            enemyType = "Butterfly";
-                            break;
-                        default:
-                            enemyType = "Boss";
-                            break;
+                        // 2. Position it at the spawn point and enable it
+                        go.transform.position = new Vector3(0, 10, 0);
+                        go.SetActive(true);
 
-                    }
+                        // 3. Set the home position data
+                        EnemyBehavior behavior = go.GetComponent<EnemyBehavior>();
+                        behavior.formationTransform = formationRoot;
+                        behavior.localHomePosition = new Vector3(
+                            (c - (cols / 2f)) * spacing.x,
+                            (r - (rows / 2f)) * spacing.y,
+                            0
+                        );
 
-                    GameObject enemy = objectPool.GetPooledObject(enemyType);
-
-                    if(enemy != null)
-                    {
-                        Vector3 homePos = new Vector3(c * spacing, r * spacing, 0);
-
-                        enemy.transform.position = new Vector3(0, 10, 0);
-                        enemy.SetActive(true);
-
-                        EnemyBehavior behavior = enemy.GetComponent<EnemyBehavior>();
-                        behavior.SetHome(formationParent, homePos);
-                    
-                        yield return new WaitForSeconds(spawnInterval);
+                        _activeEnemies.Add(behavior);
                     }
                 }
             }
         }
-        #endregion
+
+        private string GetTagForByRow(int row)
+        {
+            // Match these to the tags you set in your ObjectPool component!
+            if (row == 0) return "Bee";
+            if (row == 1) return "Butterfly";
+            return "Boss";
+        }
     }
 }
